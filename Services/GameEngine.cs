@@ -26,7 +26,7 @@ namespace StackTower.Services
         private const double InitialWidth = 300;
         private const double BlockHeight = 40; 
         private const double GameWidth = 600;
-        private double _swingSpeed = 1.0;
+        private double _swingSpeed = 0.8;
         private double _time = 0;
         
         // Pendulum
@@ -45,7 +45,7 @@ namespace StackTower.Services
             Stack.Clear();
             Debris.Clear();
             State = GameState.Swinging;
-            _swingSpeed = 1.0;
+            _swingSpeed = 0.8;
             _time = 0;
             
             // Base block
