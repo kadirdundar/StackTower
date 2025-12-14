@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
 
+# Grant GITHUB_TOKEN the permissions to push to the gh-pages branch
+permissions:
+  contents: write
+
 jobs:
   deploy-to-github-pages:
     runs-on: ubuntu-latest
