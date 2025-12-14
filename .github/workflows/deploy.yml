@@ -26,6 +26,10 @@ jobs:
     - name: Copy index.html to 404.html
       run: cp release/wwwroot/index.html release/wwwroot/404.html
 
+    # Add .nojekyll to prevent ignoring folders starting with _
+    - name: Add .nojekyll
+      run: touch release/wwwroot/.nojekyll
+
     # Deploy to gh-pages branch
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4

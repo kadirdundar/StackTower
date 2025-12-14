@@ -18,7 +18,7 @@ namespace StackTower.Services
 
         public List<Block> Stack { get; private set; } = new List<Block>();
         public List<Block> Debris { get; private set; } = new List<Block>();
-        public Block CurrentBlock { get; private set; }
+        public Block CurrentBlock { get; private set; } = default!;
         public GameState State { get; private set; } = GameState.Swinging;
         public int Score => Stack.Count - 1; // -1 because base block doesn't count
         
