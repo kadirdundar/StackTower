@@ -1,0 +1,137 @@
+@page "/"
+@using StackTower.Services
+@using StackTower.Models
+@inject GameEngine Engine
+@inject IJSRuntime JSRuntime
+
+<div class="game-container" @onclick="HandleClick" style="@BackgroundStyle">
+    <div class="score-board">
+        <h1>Stack Tower</h1>
+        <p>Score: @Engine.Score</p>
+    </div>
+
+    @if (Engine.State == GameState.GameOver)
+    {
+        <div class="game-over-overlay">
+            <h2>Game Over</h2>
+            <p>Final Score: @Engine.Score</p>
+            <button class="btn btn-primary" @onclick="RestartGame" @onclick:stopPropagation>Play Again</button>
+        </div>
+    }
+
+    <div class="game-area" style="transform: translateY(@(CameraOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))px)">
+        <!-- Clouds (World Space) -->
+        <div class="clouds" style="opacity: @(Engine.Score > 25 ? 0 : 1)">
+            <!-- Clouds at different world heights -->
+            <img src="images/cloud.png" class="cloud" style="bottom: 400px; width: 150px; animation-duration: 45s; left: -150px;" />
+            <img src="images/cloud.png" class="cloud" style="bottom: 600px; width: 100px; animation-duration: 35s; animation-delay: -10s; left: -100px;" />
+            <img src="images/cloud.png" class="cloud" style="bottom: 800px; width: 180px; animation-duration: 55s; animation-delay: -25s; left: -120px;" />
+            <img src="images/cloud.png" class="cloud" style="bottom: 200px; width: 120px; animation-duration: 40s; animation-delay: -5s; left: -120px;" />
+        </div>
+
+        @foreach (var block in Engine.Stack)
+        {
+            <div class="block" style="left: @(block.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(block.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(block.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @block.Color;"></div>
+        }
+        
+        @foreach (var debris in Engine.Debris)
+        {
+            <div class="block debris" style="left: @(debris.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(debris.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(debris.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @debris.Color; transform: rotate(@(debris.Rotation.ToString(System.Globalization.CultureInfo.InvariantCulture))deg); opacity: 0.8;"></div>
+        }
+        
+        @if (Engine.State != GameState.GameOver && Engine.CurrentBlock != null)
+        {
+            <!-- Rope -->
+            @if (Engine.State == GameState.Swinging)
+            {
+               <!-- Draw rope from Pivot (center top usually) to Block Center -->
+               <!-- Using a simple div line or SVG. SVG is better for rotation/angles. -->
+               <!-- Since Game Area is HTML, lets use an SVG overlay or just a div with rotation -->
+               <div class="rope" style="
+                   height: 200px; 
+                   left: 300px; 
+                   bottom: @(RopeBottom.ToString(System.Globalization.CultureInfo.InvariantCulture))px;
+                   transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg);
+                   transform-origin: top center;
+               "></div>
+               <!-- NOTE: Rope mechanics visually are tricky in CSS. The pivot is at Top. the Block is at Bottom. 
+                    If I rotate the rope around top, the bottom of the rope is where the block is. -->
+            }
+
+            <div class="block current" style="
+                left: @(Engine.CurrentBlock.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; 
+                width: @(Engine.CurrentBlock.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; 
+                bottom: @(Engine.CurrentBlock.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; 
+                background-color: @Engine.CurrentBlock.Color;
+                transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg);
+                transform-origin: top center;
+            "></div>
+        }
+    </div>
+</div>
+
+@code {
+    private double CameraOffset => Math.Max(0, (Engine.Stack.Count * 40) - 200);
+    // Rope pivot is at StackCount * 40 + 200 + 100 relative to game floor.
+    // Actually the pivot moves up.
+    // In GameEngine: _pivotY = (Stack.Count * 40) + 200 + 100.
+    // So rope bottom (where it connects to pivot point in CSS) needs calculation.
+    // Ah, CSS `bottom` is from bottom of container.
+    // `rope` should start at Pivot Point.
+    // Let's render rope as a line from Pivot to Block.
+    // Or easier: Render the Rope *with* the block inside a container?
+    // No, Block x/y are world coordinates now.
+    
+    // Let's rely on SVG for the Rope to be precise.
+    
+    // PivotY (Top of rope) = Stack * 40 + 300
+    // Rope Height = 200
+    // Rope Bottom = PivotY - Height = Stack * 40 + 100
+    private double RopeBottom => (Engine.Stack.Count * 40) + 100;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine("Game initializing...");
+            var dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("gameLoop.start", dotNetHelper);
+        }
+    }
+
+    [JSInvokable]
+    public void GameLoop()
+    {
+        Engine.Tick();
+        StateHasChanged();
+    }
+
+    private void HandleClick()
+    {
+        if (Engine.State == GameState.Swinging)
+        {
+            Engine.DropBlock();
+        }
+    }
+
+    private void RestartGame(MouseEventArgs e)
+    {
+        Engine.ResetGame();
+    }
+    
+    private string BackgroundStyle
+    {
+        get
+        {
+            // Simple progressive darkening logic
+            // Level 0: #3498db (Sky Blue)
+            // Level 50: #000000 (Space)
+            
+            // Defining key colors
+            if (Engine.Score < 10) return "background-color: #3498db;"; // Day
+            if (Engine.Score < 20) return "background-color: #9b59b6;"; // Sunset
+            if (Engine.Score < 30) return "background-color: #2c3e50;"; // Twilight
+            return "background-color: #1a1a2e;"; // Deep Space
+        }
+    }
+}
