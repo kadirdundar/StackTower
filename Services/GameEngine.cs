@@ -7,6 +7,7 @@ namespace StackTower.Services
 {
     public enum GameState
     {
+        Ready,
         Swinging,
         Dropping,
         GameOver
@@ -15,11 +16,13 @@ namespace StackTower.Services
     public class GameEngine
     {
         public event Action? OnStateChanged;
+        public event Action? OnBlockLanded;
+        public event Action? OnGameOver;
 
         public List<Block> Stack { get; private set; } = new List<Block>();
         public List<Block> Debris { get; private set; } = new List<Block>();
         public Block CurrentBlock { get; private set; } = default!;
-        public GameState State { get; private set; } = GameState.Swinging;
+        public GameState State { get; private set; } = GameState.Ready;
         public int Score => Stack.Count - 1; // -1 because base block doesn't count
         
         // Settings
@@ -44,7 +47,7 @@ namespace StackTower.Services
         {
             Stack.Clear();
             Debris.Clear();
-            State = GameState.Swinging;
+            State = GameState.Ready;
             _swingSpeed = 0.8;
             _time = 0;
             
@@ -58,7 +61,7 @@ namespace StackTower.Services
                 Color = "#7f8c8d" 
             });
 
-            SpawnNewBlock();
+       
         }
 
         private void SpawnNewBlock()
@@ -71,13 +74,12 @@ namespace StackTower.Services
                 Color = GetRandomColor(),
                 Y = _pivotY - RopeLength // Start at roughly rope height (will be updated in Tick)
             };
-            State = GameState.Swinging;
             OnStateChanged?.Invoke();
         }
 
         public void Tick()
         {
-            if (State == GameState.GameOver) return;
+            if (State == GameState.GameOver || State == GameState.Ready) return;
 
             if (State == GameState.Swinging)
             {
@@ -146,6 +148,16 @@ namespace StackTower.Services
             OnStateChanged?.Invoke();
         }
 
+        public void StartGame()
+        {
+            if (State == GameState.Ready)
+            {
+                SpawnNewBlock();
+                State = GameState.Swinging;
+                OnStateChanged?.Invoke();
+            }
+        }
+
         public void DropBlock()
         {
             if (State == GameState.Swinging)
@@ -172,6 +184,7 @@ namespace StackTower.Services
             if (overlap <= 0)
             {
                 State = GameState.GameOver;
+                OnGameOver?.Invoke();
             }
             else
             {
@@ -217,6 +230,8 @@ namespace StackTower.Services
                 if (_swingSpeed > 2.0) _swingSpeed = 2.0;
                 
                 SpawnNewBlock();
+                State = GameState.Swinging;
+                OnBlockLanded?.Invoke();
             }
             OnStateChanged?.Invoke();
         }

@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "StackTower",
   "resources": {
-    "hash": "sha256-zQlxLnztF55EnbSfiZaMDduOTGU/gyOg+Pdiw2aRJ14=",
+    "hash": "sha256-NfE1nDO4QMDxcTGoCJIeQEJgUp6DlzZ0n+BoQuzwUCM=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.esv38zo127.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.cwj0bpb71v.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -195,21 +195,21 @@
       "netstandard.w8gk1pigg1.wasm": "netstandard.wasm",
       "System.Private.CoreLib.6pgvn7a8kc.wasm": "System.Private.CoreLib.wasm",
       "dotnet.js": "dotnet.js",
-      "dotnet.native.8bti36lthm.js": "dotnet.native.js",
-      "dotnet.native.tr0cyonrwt.wasm": "dotnet.native.wasm",
-      "dotnet.runtime.tsg4gsv2hg.js": "dotnet.runtime.js",
+      "dotnet.native.noby4tlk4d.js": "dotnet.native.js",
+      "dotnet.native.qe75a9vfqn.wasm": "dotnet.native.wasm",
+      "dotnet.runtime.9o45ky8ejm.js": "dotnet.runtime.js",
       "icudt.oh1zvcfom8.dat": "icudt.dat",
-      "StackTower.k3guuhg1ki.wasm": "StackTower.wasm",
-      "StackTower.lja8ezb8o1.pdb": "StackTower.pdb"
+      "StackTower.h7iwhi99ti.wasm": "StackTower.wasm",
+      "StackTower.277dum9slr.pdb": "StackTower.pdb"
     },
     "jsModuleNative": {
-      "dotnet.native.8bti36lthm.js": "sha256-HFADmT26AarHu4tMjFaTPxINmQjBJGtdPN+CKjtNMFE="
+      "dotnet.native.noby4tlk4d.js": "sha256-p9eEzXhQIsI0a5bBJhfzW15iRafgplTxT8XrO5FiH9o="
     },
     "jsModuleRuntime": {
-      "dotnet.runtime.tsg4gsv2hg.js": "sha256-82FoDmY+LsehdN2u8aSGEutGEKXJHcYaSX/3zptbsCw="
+      "dotnet.runtime.9o45ky8ejm.js": "sha256-6QIZYgG+ftoT9N1H1EEJeXIhD/qbKqEcnmawDskiwdI="
     },
     "wasmNative": {
-      "dotnet.native.tr0cyonrwt.wasm": "sha256-F3/BArijJUydqmwcdWeW3LYyYHBRSu2+pyy8GL1jTV0="
+      "dotnet.native.qe75a9vfqn.wasm": "sha256-Po2dalLvTpf5jAS+jt0TzuBYybYiL1F6qAacZJ8UAdo="
     },
     "icu": {
       "icudt.oh1zvcfom8.dat": "sha256-tO5O5YzMTVSaKBboxAqezOQL9ewmupzV2JrB5Rkc8a4="
@@ -408,10 +408,10 @@
       "WindowsBase.tuf34ieu7y.wasm": "sha256-Bd+l972cOS1eVeLzrQNlgD6LPWV1QXBSzJhv8Tx1WGI=",
       "mscorlib.5q5u0swn6q.wasm": "sha256-g9cI1sECkF7bxMqOSB+W0a4utdDsqTrqZzyiAEeA65g=",
       "netstandard.w8gk1pigg1.wasm": "sha256-QFR5QNPfvyZTexW3IA/AFx6ZmIF/TecvOUsSK4gM4po=",
-      "StackTower.k3guuhg1ki.wasm": "sha256-AK+Wuqb0jUI4CMuUCS9ySQhMFbAyIpCMLhZrmfz7TCk="
+      "StackTower.h7iwhi99ti.wasm": "sha256-LS2XPnKRoVJ2LDcByFh4s5m8hAT2QqBAsVqFxGvICGc="
     },
     "pdb": {
-      "StackTower.lja8ezb8o1.pdb": "sha256-ny4bbIsQrYis+j+YKTqaxKbAMFmEJs2o3ujJkGbYcvM="
+      "StackTower.277dum9slr.pdb": "sha256-UhQk93esuZngyqqppZPjQ9DkQa/WUdQ7YzZn/m0EDr0="
     }
   },
   "cacheBootResources": true,

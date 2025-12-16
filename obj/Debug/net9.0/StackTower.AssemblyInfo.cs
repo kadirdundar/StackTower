@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StackTower")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+628afdb882adb9e12ec5f32bd2cf15b79aa987f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("StackTower")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StackTower")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

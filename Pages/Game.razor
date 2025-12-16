@@ -8,16 +8,32 @@
     <div class="score-board">
         <h1>Stack Tower</h1>
         <p>Score: @Engine.Score</p>
+        <p class="best-score">Best: @BestScore</p>
     </div>
+
+    @if (Engine.State == GameState.Ready)
+    {
+        <div class="game-over-overlay">
+            <h2>Stack Tower</h2>
+            <p>Stack blocks as high as you can!</p>
+            <p>Best Score: @BestScore</p>
+            <button class="btn btn-primary" @onclick="StartGame" @onclick:stopPropagation>Play Game</button>
+        </div>
+    }
 
     @if (Engine.State == GameState.GameOver)
     {
         <div class="game-over-overlay">
             <h2>Game Over</h2>
-            <p>Final Score: @Engine.Score</p>
+            <p>Score: @Engine.Score</p>
+            <p>Best: @BestScore</p>
             <button class="btn btn-primary" @onclick="RestartGame" @onclick:stopPropagation>Play Again</button>
         </div>
     }
+
+    <!-- Audio -->
+    <audio id="fall-sound" src="sounds/fall.mp3"></audio>
+    <audio id="scream-sound" src="sounds/scream.mp3"></audio>
 
     <div class="game-area" style="transform: translateY(@(CameraOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))px)">
         <!-- Clouds (World Space) -->
@@ -36,26 +52,15 @@
         
         @foreach (var debris in Engine.Debris)
         {
-            <div class="block debris" style="left: @(debris.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(debris.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(debris.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @debris.Color; transform: rotate(@(debris.Rotation.ToString(System.Globalization.CultureInfo.InvariantCulture))deg); opacity: 0.8;"></div>
+            <div class="block" style="left: @(debris.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(debris.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(debris.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @debris.Color; transform: rotate(@(debris.Rotation)deg);"></div>
         }
         
-        @if (Engine.State != GameState.GameOver && Engine.CurrentBlock != null)
+        @if (Engine.State != GameState.GameOver && Engine.State != GameState.Ready && Engine.CurrentBlock != null)
         {
             <!-- Rope -->
             @if (Engine.State == GameState.Swinging)
             {
-               <!-- Draw rope from Pivot (center top usually) to Block Center -->
-               <!-- Using a simple div line or SVG. SVG is better for rotation/angles. -->
-               <!-- Since Game Area is HTML, lets use an SVG overlay or just a div with rotation -->
-               <div class="rope" style="
-                   height: 200px; 
-                   left: 300px; 
-                   bottom: @(RopeBottom.ToString(System.Globalization.CultureInfo.InvariantCulture))px;
-                   transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg);
-                   transform-origin: top center;
-               "></div>
-               <!-- NOTE: Rope mechanics visually are tricky in CSS. The pivot is at Top. the Block is at Bottom. 
-                    If I rotate the rope around top, the bottom of the rope is where the block is. -->
+               <div class="rope" style="left: 299px; bottom: @(RopeBottom.ToString(System.Globalization.CultureInfo.InvariantCulture))px; height: 200px; transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg); transform-origin: top center;"></div>
             }
 
             <div class="block current" style="
@@ -71,31 +76,44 @@
 </div>
 
 @code {
+    private DotNetObjectReference<Game>? dotNetHelper;
     private double CameraOffset => Math.Max(0, (Engine.Stack.Count * 40) - 200);
-    // Rope pivot is at StackCount * 40 + 200 + 100 relative to game floor.
-    // Actually the pivot moves up.
-    // In GameEngine: _pivotY = (Stack.Count * 40) + 200 + 100.
-    // So rope bottom (where it connects to pivot point in CSS) needs calculation.
-    // Ah, CSS `bottom` is from bottom of container.
-    // `rope` should start at Pivot Point.
-    // Let's render rope as a line from Pivot to Block.
-    // Or easier: Render the Rope *with* the block inside a container?
-    // No, Block x/y are world coordinates now.
-    
-    // Let's rely on SVG for the Rope to be precise.
-    
-    // PivotY (Top of rope) = Stack * 40 + 300
-    // Rope Height = 200
-    // Rope Bottom = PivotY - Height = Stack * 40 + 100
     private double RopeBottom => (Engine.Stack.Count * 40) + 100;
+    private int BestScore { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             Console.WriteLine("Game initializing...");
-            var dotNetHelper = DotNetObjectReference.Create(this);
+            dotNetHelper = DotNetObjectReference.Create(this);
+            Engine.OnStateChanged += StateHasChanged;
+            Engine.OnBlockLanded += PlayFallSound;
+            Engine.OnGameOver += HandleGameOver;
             await JSRuntime.InvokeVoidAsync("gameLoop.start", dotNetHelper);
+            
+            // Load Best Score
+            BestScore = await JSRuntime.InvokeAsync<int>("gameLoop.getHighScore");
+            StateHasChanged();
+        }
+    }
+
+    private void PlayFallSound()
+    {
+        _ = JSRuntime.InvokeVoidAsync("gameLoop.playSound", "fall-sound");
+    }
+
+    private async void HandleGameOver()
+    {
+        // Play Sound
+        await JSRuntime.InvokeVoidAsync("gameLoop.playSound", "scream-sound");
+        
+        // Check Best Score
+        if (Engine.Score > BestScore)
+        {
+            BestScore = Engine.Score;
+            await JSRuntime.InvokeVoidAsync("gameLoop.saveHighScore", BestScore);
+            StateHasChanged();
         }
     }
 
@@ -114,24 +132,33 @@
         }
     }
 
+    private void StartGame()
+    {
+        Engine.StartGame();
+    }
+
     private void RestartGame(MouseEventArgs e)
     {
         Engine.ResetGame();
+        Engine.StartGame(); // Skip Start Screen for "Play Again"
     }
     
     private string BackgroundStyle
     {
         get
         {
-            // Simple progressive darkening logic
-            // Level 0: #3498db (Sky Blue)
-            // Level 50: #000000 (Space)
-            
-            // Defining key colors
-            if (Engine.Score < 10) return "background-color: #3498db;"; // Day
-            if (Engine.Score < 20) return "background-color: #9b59b6;"; // Sunset
-            if (Engine.Score < 30) return "background-color: #2c3e50;"; // Twilight
-            return "background-color: #1a1a2e;"; // Deep Space
+            if (Engine.Score < 10) return "background-color: #3498db;";
+            if (Engine.Score < 20) return "background-color: #9b59b6;";
+            if (Engine.Score < 30) return "background-color: #2c3e50;";
+            return "background-color: #1a1a2e;";
         }
+    }
+    
+    public void Dispose()
+    {
+        Engine.OnStateChanged -= StateHasChanged;
+        Engine.OnBlockLanded -= PlayFallSound;
+        Engine.OnGameOver -= HandleGameOver;
+        dotNetHelper?.Dispose();
     }
 }
