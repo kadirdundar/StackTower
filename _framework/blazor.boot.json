@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "StackTower",
   "resources": {
-    "hash": "sha256-OV2T/ILvTZo3sqaA6PAVspjqkj7bjwb6Yesg9WA1gJk=",
+    "hash": "sha256-rGCwXazzxm1y/BdDuzh0E/MdOQiP+Mt9qitLctQB7aE=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Components.usi7vdeaqi.wasm": "Microsoft.AspNetCore.Components.wasm",
       "Microsoft.AspNetCore.Components.Web.m6bakpaqcj.wasm": "Microsoft.AspNetCore.Components.Web.wasm",
@@ -36,8 +36,8 @@
       "System.Text.Json.m4wdlob2qg.wasm": "System.Text.Json.wasm",
       "System.Text.RegularExpressions.k8ibga7wut.wasm": "System.Text.RegularExpressions.wasm",
       "System.Threading.q2tgddxke7.wasm": "System.Threading.wasm",
-      "System.Private.CoreLib.755go2dy34.wasm": "System.Private.CoreLib.wasm",
-      "StackTower.ohikwamp6o.wasm": "StackTower.wasm",
+      "System.Private.CoreLib.mtn9u4dk4s.wasm": "System.Private.CoreLib.wasm",
+      "StackTower.4soa5fd3yb.wasm": "StackTower.wasm",
       "dotnet.js": "dotnet.js",
       "dotnet.native.noby4tlk4d.js": "dotnet.native.js",
       "dotnet.native.qe75a9vfqn.wasm": "dotnet.native.wasm",
@@ -58,7 +58,7 @@
     },
     "coreAssembly": {
       "System.Runtime.InteropServices.JavaScript.u9tzo6t7zm.wasm": "sha256-8v7jVijrzRlaTmvdds4+ZNyPL5DYfnYnzFYT2HtkqwM=",
-      "System.Private.CoreLib.755go2dy34.wasm": "sha256-9dG8PQAwXZHcZOWAt9yLH4r80UNlXHyUg97zOc9Ey2Q="
+      "System.Private.CoreLib.mtn9u4dk4s.wasm": "sha256-2h73G1vx0IFYvzbJrOTjzPbIWGS0oFJzqaaIvpVzgCE="
     },
     "assembly": {
       "Microsoft.AspNetCore.Components.usi7vdeaqi.wasm": "sha256-7o3tbiCMMYou6sQLFiXWLWPqRZ48e7muQKmG+DekCxY=",
@@ -93,7 +93,7 @@
       "System.Text.Json.m4wdlob2qg.wasm": "sha256-5qjfGZGHbvBXYE9OBLQ32FHz6vObx9o8C5SsZm1rOto=",
       "System.Text.RegularExpressions.k8ibga7wut.wasm": "sha256-7OYvLuFLvwbax++2u+uoDmoaX8o/Q8wcYJC92eP1YjA=",
       "System.Threading.q2tgddxke7.wasm": "sha256-zncUNmLvW8+ubA+sqWx5FiQfdH+7iXKdHOZT34w96r0=",
-      "StackTower.ohikwamp6o.wasm": "sha256-ZD1tgtJmKpuIyEj+dha9MrDvOkz8qsKWa9uaZ579yno="
+      "StackTower.4soa5fd3yb.wasm": "sha256-DBMsO36NOqGXh8hd3VO92HdFNUcy/ArOAn0NKwo4YDE="
     }
   },
   "cacheBootResources": true,
