@@ -1,0 +1,32 @@
+@using System.Globalization
+
+<div class="clouds" style="opacity: @(Score > 25 ? 0 : 1)">
+    <!-- Clouds at different world heights -->
+    <img src="images/cloud.png" class="cloud" style="bottom: 400px; width: 150px; animation-duration: 45s; left: -150px;" />
+    <img src="images/cloud.png" class="cloud" style="bottom: 600px; width: 100px; animation-duration: 35s; animation-delay: -10s; left: -100px;" />
+    <img src="images/cloud.png" class="cloud" style="bottom: 800px; width: 180px; animation-duration: 55s; animation-delay: -25s; left: -120px;" />
+    <img src="images/cloud.png" class="cloud" style="bottom: 200px; width: 120px; animation-duration: 40s; animation-delay: -5s; left: -120px;" />
+</div>
+
+@code {
+    [Parameter]
+    public int Score { get; set; }
+
+    private bool _isVisible = true;
+
+    protected override bool ShouldRender()
+    {
+        // Only render if visibility state changes
+        // Visible when Score <= 25.
+        // Hidden when Score > 25.
+        
+        bool shouldBeVisible = Score <= 25;
+        
+        if (_isVisible != shouldBeVisible)
+        {
+            _isVisible = shouldBeVisible;
+            return true;
+        }
+        return false;
+    }
+}

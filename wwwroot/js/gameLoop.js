@@ -19,5 +19,9 @@ window.gameLoop = {
     },
     getHighScore: () => {
         return parseInt(localStorage.getItem('stackTower_highScore')) || 0;
+    },
+    getContainerHeight: () => {
+        // Return window inner height or a specific container's height
+        return window.innerHeight;
     }
 };

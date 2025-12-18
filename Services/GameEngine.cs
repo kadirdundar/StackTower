@@ -29,14 +29,28 @@ namespace StackTower.Services
         private const double InitialWidth = 300;
         private const double BlockHeight = 40; 
         private const double GameWidth = 600;
-        private double _swingSpeed = 0.8;
+        private double _swingSpeed = 0.5;
         private double _time = 0;
         
         // Pendulum
-        private const double RopeLength = 200;
-        private const double MaxSwingAngle = 1.0; // Radians (~57 degrees)
+        private double _ropeLength = 200;
+        public double RopeLength 
+        { 
+            get => _ropeLength; 
+            set 
+            {
+                _ropeLength = value;
+                // Calculate max angle to keep block within screen (Radius ~ 250px)
+                // Width 600. Center 300. Max acceptable offset ~250.
+                // 250 = L * sin(theta) -> sin(theta) = 250 / L
+                double ratio = 250.0 / Math.Max(_ropeLength, 1);
+                if (ratio > 1.0) ratio = 1.0;
+                MaxSwingAngle = Math.Asin(ratio);
+            } 
+        }
+        private double MaxSwingAngle = 1.0; // Radians
         private double _pivotX => GameWidth / 2;
-        private double _pivotY => (Stack.Count * BlockHeight) + RopeLength + 100; // Pivot moves up with stack
+        public double PivotY => (Stack.Count * BlockHeight) + RopeLength + 100; // Pivot moves up with stack
 
         public GameEngine()
         {
@@ -48,7 +62,7 @@ namespace StackTower.Services
             Stack.Clear();
             Debris.Clear();
             State = GameState.Ready;
-            _swingSpeed = 0.8;
+            _swingSpeed = 0.3;
             _time = 0;
             
             // Base block
@@ -72,7 +86,7 @@ namespace StackTower.Services
                 Width = prevBlock.Width, // Inherit width from previous
                 Level = Stack.Count,
                 Color = GetRandomColor(),
-                Y = _pivotY - RopeLength // Start at roughly rope height (will be updated in Tick)
+                Y = PivotY - RopeLength // Start at roughly rope height (will be updated in Tick)
             };
             OnStateChanged?.Invoke();
         }
@@ -96,7 +110,7 @@ namespace StackTower.Services
                 // PivotY is height from bottom.
                 
                 CurrentBlock.X = (_pivotX + RopeLength * Math.Sin(CurrentBlock.Angle)) - (CurrentBlock.Width / 2);
-                CurrentBlock.Y = _pivotY - (RopeLength * Math.Cos(CurrentBlock.Angle)) - BlockHeight;
+                CurrentBlock.Y = PivotY - (RopeLength * Math.Cos(CurrentBlock.Angle)) - BlockHeight;
                 
                 // Visual Rotation (optional, maybe keep it flat for easier stacking?)
                 // CurrentBlock.Rotation = CurrentBlock.Angle * (180 / Math.PI); 

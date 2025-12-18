@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "StackTower",
   "resources": {
-    "hash": "sha256-NfE1nDO4QMDxcTGoCJIeQEJgUp6DlzZ0n+BoQuzwUCM=",
+    "hash": "sha256-arwqH7YUb+kCfI7oWxnV6JBUfGA5bRPGEjFIdn8nyR0=",
     "fingerprinting": {
       "Microsoft.AspNetCore.Authorization.esv38zo127.wasm": "Microsoft.AspNetCore.Authorization.wasm",
       "Microsoft.AspNetCore.Components.cwj0bpb71v.wasm": "Microsoft.AspNetCore.Components.wasm",
@@ -199,8 +199,8 @@
       "dotnet.native.qe75a9vfqn.wasm": "dotnet.native.wasm",
       "dotnet.runtime.9o45ky8ejm.js": "dotnet.runtime.js",
       "icudt.oh1zvcfom8.dat": "icudt.dat",
-      "StackTower.h7iwhi99ti.wasm": "StackTower.wasm",
-      "StackTower.277dum9slr.pdb": "StackTower.pdb"
+      "StackTower.hosqjbiypw.wasm": "StackTower.wasm",
+      "StackTower.i9occhlstj.pdb": "StackTower.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.noby4tlk4d.js": "sha256-p9eEzXhQIsI0a5bBJhfzW15iRafgplTxT8XrO5FiH9o="
@@ -408,10 +408,10 @@
       "WindowsBase.tuf34ieu7y.wasm": "sha256-Bd+l972cOS1eVeLzrQNlgD6LPWV1QXBSzJhv8Tx1WGI=",
       "mscorlib.5q5u0swn6q.wasm": "sha256-g9cI1sECkF7bxMqOSB+W0a4utdDsqTrqZzyiAEeA65g=",
       "netstandard.w8gk1pigg1.wasm": "sha256-QFR5QNPfvyZTexW3IA/AFx6ZmIF/TecvOUsSK4gM4po=",
-      "StackTower.h7iwhi99ti.wasm": "sha256-LS2XPnKRoVJ2LDcByFh4s5m8hAT2QqBAsVqFxGvICGc="
+      "StackTower.hosqjbiypw.wasm": "sha256-T020aV5RiAvZnQZVb+8OdtuLhWHIlnj2FyaPutPnuag="
     },
     "pdb": {
-      "StackTower.277dum9slr.pdb": "sha256-UhQk93esuZngyqqppZPjQ9DkQa/WUdQ7YzZn/m0EDr0="
+      "StackTower.i9occhlstj.pdb": "sha256-1sXlRjDTtVRxnYGZOI+CF5d6PUrATo61dJ2wnHmZcJc="
     }
   },
   "cacheBootResources": true,

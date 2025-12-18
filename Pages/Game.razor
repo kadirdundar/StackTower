@@ -36,23 +36,13 @@
     <audio id="scream-sound" src="sounds/scream.mp3"></audio>
 
     <div class="game-area" style="transform: translateY(@(CameraOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))px)">
-        <!-- Clouds (World Space) -->
-        <div class="clouds" style="opacity: @(Engine.Score > 25 ? 0 : 1)">
-            <!-- Clouds at different world heights -->
-            <img src="images/cloud.png" class="cloud" style="bottom: 400px; width: 150px; animation-duration: 45s; left: -150px;" />
-            <img src="images/cloud.png" class="cloud" style="bottom: 600px; width: 100px; animation-duration: 35s; animation-delay: -10s; left: -100px;" />
-            <img src="images/cloud.png" class="cloud" style="bottom: 800px; width: 180px; animation-duration: 55s; animation-delay: -25s; left: -120px;" />
-            <img src="images/cloud.png" class="cloud" style="bottom: 200px; width: 120px; animation-duration: 40s; animation-delay: -5s; left: -120px;" />
-        </div>
+        <BackgroundClouds Score="Engine.Score" />
 
-        @foreach (var block in Engine.Stack)
-        {
-            <div class="block" style="left: @(block.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(block.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(block.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @block.Color;"></div>
-        }
+        <LandedStack Stack="Engine.Stack" />
         
         @foreach (var debris in Engine.Debris)
         {
-            <div class="block" style="left: @(debris.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(debris.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(debris.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @debris.Color; transform: rotate(@(debris.Rotation)deg);"></div>
+            <div @key="debris" class="block" style="left: @(debris.X.ToString(System.Globalization.CultureInfo.InvariantCulture))px; width: @(debris.Width.ToString(System.Globalization.CultureInfo.InvariantCulture))px; bottom: @(debris.Y.ToString(System.Globalization.CultureInfo.InvariantCulture))px; background-color: @debris.Color; transform: rotate(@(debris.Rotation)deg);"></div>
         }
         
         @if (Engine.State != GameState.GameOver && Engine.State != GameState.Ready && Engine.CurrentBlock != null)
@@ -60,7 +50,7 @@
             <!-- Rope -->
             @if (Engine.State == GameState.Swinging)
             {
-               <div class="rope" style="left: 299px; bottom: @(RopeBottom.ToString(System.Globalization.CultureInfo.InvariantCulture))px; height: 200px; transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg); transform-origin: top center;"></div>
+               <div class="rope" style="left: 299px; bottom: @(RopeBottom.ToString(System.Globalization.CultureInfo.InvariantCulture))px; height: @(Engine.RopeLength.ToString(System.Globalization.CultureInfo.InvariantCulture))px; transform: rotate(@((-1 * Engine.CurrentBlock.Rotation).ToString(System.Globalization.CultureInfo.InvariantCulture))deg); transform-origin: top center;"></div>
             }
 
             <div class="block current" style="
@@ -77,7 +67,11 @@
 
 @code {
     private DotNetObjectReference<Game>? dotNetHelper;
+    private double ContainerHeight { get; set; } = 800; // Default
+    
+    // Revert to standard camera following the stack
     private double CameraOffset => Math.Max(0, (Engine.Stack.Count * 40) - 200);
+    
     private double RopeBottom => (Engine.Stack.Count * 40) + 100;
     private int BestScore { get; set; }
 
@@ -91,6 +85,27 @@
             Engine.OnBlockLanded += PlayFallSound;
             Engine.OnGameOver += HandleGameOver;
             await JSRuntime.InvokeVoidAsync("gameLoop.start", dotNetHelper);
+            
+            // Get Container Height and Set Rope Length
+            try 
+            {
+               int height = await JSRuntime.InvokeAsync<int>("gameLoop.getContainerHeight");
+               if (height > 0) 
+               {
+                   ContainerHeight = height;
+                   // Set Rope Length so pivot is near top
+                   // We want PivotY when CameraOffset is 0 (start) to be roughly ContainerHeight - 100
+                   // PivotY = (StackCount*40) + RopeLength + 100
+                   // StackCount=1 => 40 + RopeLength + 100 = RopeLength + 140
+                   // RopeLength + 140 = ContainerHeight - 50 margin
+                   // RopeLength = ContainerHeight - 190
+                   Engine.RopeLength = ContainerHeight - 200; 
+               }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error getting height: " + ex.Message);
+            }
             
             // Load Best Score
             BestScore = await JSRuntime.InvokeAsync<int>("gameLoop.getHighScore");

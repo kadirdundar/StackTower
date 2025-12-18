@@ -30,6 +30,14 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/kadirdundar/Desktop/StackTower/Components/BackgroundClouds.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9CYWNrZ3JvdW5kQ2xvdWRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/kadirdundar/Desktop/StackTower/Components/LandedStack.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9MYW5kZWRTdGFjay5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/kadirdundar/Desktop/StackTower/Pages/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQ291bnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

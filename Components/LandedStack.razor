@@ -1,0 +1,25 @@
+@using StackTower.Models
+@using System.Globalization
+
+@foreach (var block in Stack)
+{
+    <div class="block" style="left: @(block.X.ToString(CultureInfo.InvariantCulture))px; width: @(block.Width.ToString(CultureInfo.InvariantCulture))px; bottom: @(block.Y.ToString(CultureInfo.InvariantCulture))px; background-color: @block.Color;"></div>
+}
+
+@code {
+    [Parameter]
+    public List<Block> Stack { get; set; } = new();
+
+    private int _lastCount = 0;
+
+    protected override bool ShouldRender()
+    {
+        // Only render if the stack count has changed (block landed)
+        if (Stack.Count != _lastCount)
+        {
+            _lastCount = Stack.Count;
+            return true;
+        }
+        return false;
+    }
+}
