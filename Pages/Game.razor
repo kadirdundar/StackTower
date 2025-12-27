@@ -4,7 +4,7 @@
 @inject GameEngine Engine
 @inject IJSRuntime JSRuntime
 
-<div class="game-container" @onclick="HandleClick" style="@BackgroundStyle">
+<div class="game-container" style="@BackgroundStyle" id="game-container">
     <div class="score-board">
         <h1>Stack Tower</h1>
         <p>Score: @Engine.Score</p>
@@ -34,6 +34,7 @@
     <!-- Audio -->
     <audio id="fall-sound" src="sounds/fall.mp3"></audio>
     <audio id="scream-sound" src="sounds/scream.mp3"></audio>
+    <audio id="naneyi-yemedin-mi" src="sounds/naneyiYemedinMi.mp3"></audio>
 
     <div class="game-area" style="transform: translateY(@(CameraOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))px)">
         <BackgroundClouds Score="Engine.Score" />
@@ -83,6 +84,7 @@
             dotNetHelper = DotNetObjectReference.Create(this);
             Engine.OnStateChanged += StateHasChanged;
             Engine.OnBlockLanded += PlayFallSound;
+            Engine.OnTinyBlockLanded += PlayTinyBlockSound;
             Engine.OnGameOver += HandleGameOver;
             await JSRuntime.InvokeVoidAsync("gameLoop.start", dotNetHelper);
             
@@ -118,6 +120,11 @@
         _ = JSRuntime.InvokeVoidAsync("gameLoop.playSound", "fall-sound");
     }
 
+    private void PlayTinyBlockSound()
+    {
+        _ = JSRuntime.InvokeVoidAsync("gameLoop.playSound", "naneyi-yemedin-mi");
+    }
+
     private async void HandleGameOver()
     {
         // Play Sound
@@ -133,19 +140,23 @@
     }
 
     [JSInvokable]
-    public void GameLoop()
+    public void GameLoop(double deltaTime)
     {
-        Engine.Tick();
+        Engine.Tick(deltaTime);
         StateHasChanged();
     }
 
-    private void HandleClick()
+    [JSInvokable]
+    public void HandleJSInput()
     {
         if (Engine.State == GameState.Swinging)
         {
             Engine.DropBlock();
+            StateHasChanged();
         }
     }
+
+
 
     private void StartGame()
     {
@@ -173,6 +184,7 @@
     {
         Engine.OnStateChanged -= StateHasChanged;
         Engine.OnBlockLanded -= PlayFallSound;
+        Engine.OnTinyBlockLanded -= PlayTinyBlockSound;
         Engine.OnGameOver -= HandleGameOver;
         dotNetHelper?.Dispose();
     }

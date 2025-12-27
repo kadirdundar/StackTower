@@ -17,6 +17,7 @@ namespace StackTower.Services
     {
         public event Action? OnStateChanged;
         public event Action? OnBlockLanded;
+        public event Action? OnTinyBlockLanded;
         public event Action? OnGameOver;
 
         public List<Block> Stack { get; private set; } = new List<Block>();
@@ -29,7 +30,7 @@ namespace StackTower.Services
         private const double InitialWidth = 300;
         private const double BlockHeight = 40; 
         private const double GameWidth = 600;
-        private double _swingSpeed = 0.5;
+        private double _swingSpeed = 2.0; // Reduced from 10.0 to match original feel (~1.5-2.0 rad/s)
         private double _time = 0;
         
         // Pendulum
@@ -62,7 +63,7 @@ namespace StackTower.Services
             Stack.Clear();
             Debris.Clear();
             State = GameState.Ready;
-            _swingSpeed = 0.3;
+            _swingSpeed = 1.5; // Start slower
             _time = 0;
             
             // Base block
@@ -72,7 +73,7 @@ namespace StackTower.Services
                 Y = 0,
                 Width = InitialWidth,
                 Level = 0,
-                Color = "#7f8c8d" 
+                Color = GetGradientColor(0) 
             });
 
        
@@ -85,50 +86,42 @@ namespace StackTower.Services
             {
                 Width = prevBlock.Width, // Inherit width from previous
                 Level = Stack.Count,
-                Color = GetRandomColor(),
+                Color = GetGradientColor(Stack.Count),
                 Y = PivotY - RopeLength // Start at roughly rope height (will be updated in Tick)
             };
             OnStateChanged?.Invoke();
         }
 
-        public void Tick()
+        public void Tick(double deltaTime)
         {
             if (State == GameState.GameOver || State == GameState.Ready) return;
 
             if (State == GameState.Swinging)
             {
-                _time += 0.05 * _swingSpeed;
+                // deltaTime is in seconds (e.g. 0.016 for 60fps)
+                _time += deltaTime * _swingSpeed;
                 
                 // Calculate Pendulum motion
-                // Angle oscillates
                 CurrentBlock.Angle = Math.Sin(_time) * MaxSwingAngle;
-                
-                // Position based on angle and pivot
-                // x = pivot + L * sin(theta)
-                // y = pivot - L * cos(theta) (CSS coordinate system: bottom is 0)
-                // Actually in CSS bottom 0 is bottom.
-                // PivotY is height from bottom.
                 
                 CurrentBlock.X = (_pivotX + RopeLength * Math.Sin(CurrentBlock.Angle)) - (CurrentBlock.Width / 2);
                 CurrentBlock.Y = PivotY - (RopeLength * Math.Cos(CurrentBlock.Angle)) - BlockHeight;
                 
-                // Visual Rotation (optional, maybe keep it flat for easier stacking?)
-                // CurrentBlock.Rotation = CurrentBlock.Angle * (180 / Math.PI); 
-                // Let's keep it flat for now as "ferris wheel seat" style to fix the stacking logic issues.
-                // Or user explicitly said "ip üzerinde sallanıyor". Usually that means rotation.
-                // If I rotate, I must reset rotation on drop.
                 CurrentBlock.Rotation = CurrentBlock.Angle * (180.0 / Math.PI);
             }
             else if (State == GameState.Dropping)
             {
-                // Gravity drop
-                CurrentBlock.SpeedY += 1.5; // Gravity acceleration
-                CurrentBlock.Y -= CurrentBlock.SpeedY;
+                // Gravity drop (acceleration * t^2 practically, but we do velocity iteration)
+                // Original was 1.5 px/frame^2. 1.5 * 60 * 60 = 5400 px/s^2.
+                const double Gravity = 5000.0; 
+                CurrentBlock.SpeedY += Gravity * deltaTime; 
+                CurrentBlock.Y -= CurrentBlock.SpeedY * deltaTime;
                 
-                // While dropping, rotate back to 0?
+                // While dropping, rotate back to 0
                 if (Math.Abs(CurrentBlock.Rotation) > 1)
                 {
-                    CurrentBlock.Rotation *= 0.6; // Smoothly correct to 0
+                    // Smoothly correct to 0 based on time
+                    CurrentBlock.Rotation *= Math.Exp(-10.0 * deltaTime); // Faster correction
                 }
                 else
                 {
@@ -140,18 +133,19 @@ namespace StackTower.Services
                 if (CurrentBlock.Y <= stackTop)
                 {
                     CurrentBlock.Y = stackTop;
-                    CurrentBlock.Rotation = 0; // Force flat on land
+                    CurrentBlock.Rotation = 0; 
                     LandBlock();
                 }
             }
             
             // Update Debris
+            const double DebrisGravity = 5000.0;
             for (int i = Debris.Count - 1; i >= 0; i--)
             {
                 var debris = Debris[i];
-                debris.SpeedY += 1.5;
-                debris.Y -= debris.SpeedY;
-                debris.Rotation += debris.RotationSpeed;
+                debris.SpeedY += DebrisGravity * deltaTime;
+                debris.Y -= debris.SpeedY * deltaTime;
+                debris.Rotation += debris.RotationSpeed * deltaTime * 60; // Keep scale similar
                 
                 if (debris.Y < -100)
                 {
@@ -240,9 +234,14 @@ namespace StackTower.Services
                 }
                 
                 // Increase difficulty
-                _swingSpeed += 0.05;
-                if (_swingSpeed > 2.0) _swingSpeed = 2.0;
+                _swingSpeed += 0.1; // Small increment
+                if (_swingSpeed > 5.0) _swingSpeed = 5.0;
                 
+                if (overlap <= prevBlock.Width * 0.5)
+                {
+                    OnTinyBlockLanded?.Invoke();
+                }
+
                 SpawnNewBlock();
                 State = GameState.Swinging;
                 OnBlockLanded?.Invoke();
@@ -250,10 +249,11 @@ namespace StackTower.Services
             OnStateChanged?.Invoke();
         }
 
-        private string GetRandomColor()
+        private string GetGradientColor(int level)
         {
-            string[] colors = { "#e74c3c", "#8e44ad", "#e67e22", "#2ecc71", "#f1c40f" };
-            return colors[new Random().Next(colors.Length)];
+            // Start red (0), cycle every 50 blocks
+            int hue = (level * 10) % 360; 
+            return $"hsl({hue}, 70%, 50%)";
         }
     }
 }
