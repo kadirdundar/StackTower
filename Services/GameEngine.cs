@@ -25,6 +25,7 @@ namespace StackTower.Services
         public Block CurrentBlock { get; private set; } = default!;
         public GameState State { get; private set; } = GameState.Ready;
         public int Score => Stack.Count - 1; // -1 because base block doesn't count
+        public bool LastBlockPerfect { get; private set; }
         
         // Settings
         private const double InitialWidth = 300;
@@ -196,41 +197,59 @@ namespace StackTower.Services
             }
             else
             {
-                // Trim
-                CurrentBlock.X = overlapStart;
-                CurrentBlock.Width = overlap;
+                // Check if perfect (within 3px tolerance)
+                double minWidth = Math.Min(CurrentBlock.Width, prevBlock.Width);
+                if (overlap >= minWidth - 3) 
+                {
+                    LastBlockPerfect = true;
+                    // Snap to perfect position
+                    CurrentBlock.X = prevBlock.X; 
+                    CurrentBlock.Width = prevBlock.Width;
+                    // Recalculate overlap vars for consistency though we skip debris
+                    overlap = prevBlock.Width;
+                    overlapStart = prevBlock.X; 
+                }
+                else
+                {
+                    LastBlockPerfect = false;
+                }
+
+                // Trim if not perfect
+                if (!LastBlockPerfect)
+                {
+                    CurrentBlock.X = overlapStart;
+                    CurrentBlock.Width = overlap;
+                }
                 
                 Stack.Add(CurrentBlock);
                 
-                // Create Debris
-                double cutWidth = (currentEnd - currentStart) - overlap;
-                if (cutWidth > 0)
+                // Create Debris (only if not perfect)
+                if (!LastBlockPerfect)
                 {
-                    var debrisBlock = new Block
+                    double cutWidth = (currentEnd - currentStart) - overlap;
+                    if (cutWidth > 0)
                     {
-                        Y = CurrentBlock.Y,
-                        Width = cutWidth,
-                        Color = CurrentBlock.Color,
-                        Level = CurrentBlock.Level,
-                        SpeedY = -5, // Slight pop up
-                        RotationSpeed = new Random().NextDouble() < 0.5 ? 5 : -5
-                    };
+                        var debrisBlock = new Block
+                        {
+                            Y = CurrentBlock.Y,
+                            Width = cutWidth,
+                            Color = CurrentBlock.Color,
+                            Level = CurrentBlock.Level,
+                            SpeedY = -5, 
+                            RotationSpeed = new Random().NextDouble() < 0.5 ? 5 : -5
+                        };
 
-                    if (currentStart < prevStart) // Cut from left
-                    {
-                        debrisBlock.X = currentStart;
+                        if (currentStart < prevStart) // Cut from left
+                        {
+                            debrisBlock.X = currentStart;
+                        }
+                        else // Cut from right
+                        {
+                            debrisBlock.X = prevEnd;
+                        }
+                        
+                        Debris.Add(debrisBlock);
                     }
-                    else // Cut from right
-                    {
-                        debrisBlock.X = currentEnd - cutWidth; 
-                        // Actually if currentEnd > prevEnd, the cut part is at the right end.
-                        // currentEnd is 100. prevEnd is 80. Overlap is 80.
-                        // Cut width 20.
-                        // Debris X should be at 80.
-                        debrisBlock.X = prevEnd;
-                    }
-                    
-                    Debris.Add(debrisBlock);
                 }
                 
                 // Increase difficulty

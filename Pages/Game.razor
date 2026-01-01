@@ -4,10 +4,14 @@
 @inject GameEngine Engine
 @inject IJSRuntime JSRuntime
 
-<div class="game-container" style="@BackgroundStyle" id="game-container">
+<div class="game-container @ShakeClass" style="@BackgroundStyle" id="game-container">
+    @if (ShowFlash)
+    {
+        <div class="flash-overlay"></div>
+    }
     <div class="score-board">
         <h1>Stack Tower</h1>
-        <p>Score: @Engine.Score</p>
+        <p class="@ScoreClass">Score: @Engine.Score</p>
         <p class="best-score">Best: @BestScore</p>
     </div>
 
@@ -76,6 +80,14 @@
     private double RopeBottom => (Engine.Stack.Count * 40) + 100;
     private int BestScore { get; set; }
 
+    private string ShakeClass => IsShaking ? "shake" : "";
+    private bool IsShaking { get; set; }
+    
+    private string ScoreClass => IsScorePopping ? "score-pop" : "";
+    private bool IsScorePopping { get; set; }
+    
+    private bool ShowFlash { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -83,34 +95,38 @@
             Console.WriteLine("Game initializing...");
             dotNetHelper = DotNetObjectReference.Create(this);
             Engine.OnStateChanged += StateHasChanged;
-            Engine.OnBlockLanded += PlayFallSound;
+            Engine.OnBlockLanded += HandleBlockLanded; // Changed handler
             Engine.OnTinyBlockLanded += PlayTinyBlockSound;
             Engine.OnGameOver += HandleGameOver;
             await JSRuntime.InvokeVoidAsync("gameLoop.start", dotNetHelper);
             
-            // Get Container Height and Set Rope Length
-            try 
-            {
-               int height = await JSRuntime.InvokeAsync<int>("gameLoop.getContainerHeight");
-               if (height > 0) 
-               {
-                   ContainerHeight = height;
-                   // Set Rope Length so pivot is near top
-                   // We want PivotY when CameraOffset is 0 (start) to be roughly ContainerHeight - 100
-                   // PivotY = (StackCount*40) + RopeLength + 100
-                   // StackCount=1 => 40 + RopeLength + 100 = RopeLength + 140
-                   // RopeLength + 140 = ContainerHeight - 50 margin
-                   // RopeLength = ContainerHeight - 190
-                   Engine.RopeLength = ContainerHeight - 200; 
-               }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error getting height: " + ex.Message);
-            }
+            // Initialize Resize Handling
+            await JSRuntime.InvokeVoidAsync("gameLoop.initResize", dotNetHelper);
             
             // Load Best Score
             BestScore = await JSRuntime.InvokeAsync<int>("gameLoop.getHighScore");
+            StateHasChanged();
+        }
+    }
+
+    private async void HandleBlockLanded()
+    {
+        PlayFallSound();
+        
+        // Trigger Score Pop
+        IsScorePopping = true;
+        StateHasChanged();
+        await Task.Delay(200);
+        IsScorePopping = false;
+        StateHasChanged();
+
+        // Trigger Flash if perfect
+        if (Engine.LastBlockPerfect)
+        {
+            ShowFlash = true;
+            StateHasChanged();
+            await Task.Delay(300);
+            ShowFlash = false;
             StateHasChanged();
         }
     }
@@ -127,6 +143,10 @@
 
     private async void HandleGameOver()
     {
+        // Trigger Shake
+        IsShaking = true;
+        StateHasChanged();
+        
         // Play Sound
         await JSRuntime.InvokeVoidAsync("gameLoop.playSound", "scream-sound");
         
@@ -135,14 +155,26 @@
         {
             BestScore = Engine.Score;
             await JSRuntime.InvokeVoidAsync("gameLoop.saveHighScore", BestScore);
-            StateHasChanged();
         }
+        
+        await Task.Delay(500);
+        IsShaking = false;
+        StateHasChanged();
     }
 
     [JSInvokable]
     public void GameLoop(double deltaTime)
     {
         Engine.Tick(deltaTime);
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void UpdateGameDimensions(double height)
+    {
+        ContainerHeight = height;
+        // Recalculate Rope Length dynamically
+        Engine.RopeLength = ContainerHeight - 200;
         StateHasChanged();
     }
 
@@ -155,8 +187,6 @@
             StateHasChanged();
         }
     }
-
-
 
     private void StartGame()
     {
@@ -183,7 +213,7 @@
     public void Dispose()
     {
         Engine.OnStateChanged -= StateHasChanged;
-        Engine.OnBlockLanded -= PlayFallSound;
+        Engine.OnBlockLanded -= HandleBlockLanded;
         Engine.OnTinyBlockLanded -= PlayTinyBlockSound;
         Engine.OnGameOver -= HandleGameOver;
         dotNetHelper?.Dispose();
