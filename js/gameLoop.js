@@ -40,5 +40,30 @@ window.gameLoop = {
     },
     getContainerHeight: () => {
         return window.innerHeight;
+    },
+    initResize: (dotNetHelper) => {
+        const resize = () => {
+            const container = document.getElementById('game-container');
+            if (container) {
+                const gameWidth = 600;
+                const scale = Math.min(window.innerWidth / gameWidth, 1);
+
+                // Scale the container
+                container.style.transform = `scale(${scale})`;
+                container.style.transformOrigin = 'top center';
+
+                // Adjust height to fill screen (compensated for scale)
+                // If scale is 0.5, and screen height is 800, we need internal height to be 1600.
+                const internalHeight = window.innerHeight / scale;
+                container.style.height = `${internalHeight}px`;
+                container.style.width = `${gameWidth}px`; // Fix width
+
+                // Notify C#
+                dotNetHelper.invokeMethodAsync('UpdateGameDimensions', internalHeight);
+            }
+        };
+
+        window.addEventListener('resize', resize);
+        resize(); // Initial call
     }
 };
